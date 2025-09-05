@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AI Quiz Game</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#eee; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .card { background:#222; padding:20px; border-radius:12px; max-width:600px; width:100%; }
+    button { padding:10px; margin:6px 0; border:none; border-radius:8px; cursor:pointer; width:100%; background:#444; color:white; }
+    button:hover { background:#666; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>AI Quiz</h1>
+    <div id="question">Click “New Question”</div>
+    <div id="choices"></div>
+    <button onclick="newQuestion()">New Question</button>
+  </div>
+
+  <script>
+    async function newQuestion() {
+      document.getElementById('question').textContent = "Loading...";
+      document.getElementById('choices').innerHTML = "";
+
+      const res = await fetch("/api/generate", { method:"POST" });
+      const data = await res.json();
+
+      try {
+        // model response is inside data.choices[0].message.content
+        const text = data.choices[0].message.content;
+        const quiz = JSON.parse(text);
+
+        document.getElementById('question').textContent = quiz.q;
+        quiz.options.forEach((opt,i)=>{
+          const btn = document.createElement("button");
+          btn.textContent = opt;
+          btn.onclick = ()=> alert(i === quiz.answer ? "✅ Correct!" : "❌ Wrong!");
+          document.getElementById('choices').appendChild(btn);
+        });
+      } catch(e) {
+        document.getElementById('question').textContent = "Error parsing AI output.";
+        console.error(e, data);
+      }
+    }
+  </script>
+</body>
+</html>
